@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Даша, это тебе 🎁</title>
+<style>
+:root{--bg:#120d14;--card:#1e1622;--text:#f4ecf6;--muted:#b8a8bd;--accent:#ff4d6d;--gold:#ffd166;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#fff4f6;--card:#ffffff;--text:#2a1830;--muted:#6d5a73;--accent:#e0224a;--gold:#c98a00}}
+*{box-sizing:border-box}
+html,body{min-height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;align-items:center;justify-content:center;overflow-x:hidden}
+.screen{display:none;width:100%;max-width:460px;padding:24px;text-align:center;animation:in .6s ease}
+.screen.active{display:block}
+@keyframes in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+h2{font-size:1.35rem;margin:.2em 0 .8em}
+p{line-height:1.5;color:var(--muted);margin:.5em 0}
+.emoji{font-size:4rem}
+button{background:var(--accent);color:#fff;border:0;border-radius:999px;padding:14px 28px;font-size:1.05rem;cursor:pointer;margin-top:20px}
+button:active{transform:scale(.97)}
+img.pic{width:100%;border-radius:14px;margin:8px 0}
+.opt{display:block;width:100%;background:var(--card);color:var(--text);border:2px solid transparent;margin:10px 0 0;text-align:left;border-radius:14px}
+.opt.good{border-color:#3ddc84}
+.opt.bad{border-color:var(--accent);opacity:.45;pointer-events:none}
+.ghost{background:transparent;color:var(--gold);border:1px dashed var(--gold);padding:8px 18px;font-size:.95rem;margin-top:8px}
+.fb{min-height:1.5em;margin-top:14px;color:var(--gold)}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#volbar{display:none;position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--card);align-items:center;justify-content:center;gap:8px 10px;flex-wrap:wrap;z-index:10;font-size:.9rem;color:var(--muted)}
+#volbar #seek{flex:1 1 120px;min-width:100px}
+#volbar #volr{flex:0 1 110px;min-width:70px}
+#volbar button{margin:0;padding:6px 14px;font-size:1rem}
+.cong{padding-bottom:120px}
+</style>
+</head>
+<body>
+
+<div class="screen active" id="s1">
+  <img class="pic" src="photo1.jpg" alt="">
+  <img class="pic" src="photo.jpg" alt="">
+  <button onclick="go(2)">Открыть</button>
+</div>
+
+<div class="screen" id="s2">
+  <div class="emoji">🎁</div>
+  <h2>Я сделал тебе типо конвертика с вопросами от меня</h2>
+  <button onclick="go(3)">Дальше →</button>
+</div>
+
+<div class="screen" id="s3">
+  <p id="qn"></p>
+  <h2 id="qt"></h2>
+  <button class="ghost" id="hintbtn" style="display:none" onclick="showHint()">💡 Подсказка</button>
+  <img class="pic" id="qi" alt="" style="display:none">
+  <div id="qo"></div>
+  <div class="fb" id="fb"></div>
+  <div id="vid" style="display:none"></div>
+  <button id="qnext" style="display:none" onclick="nextQ()">Дальше →</button>
+</div>
+
+<div class="screen cong" id="s4">
+  <h2>С днём рождения Даша! 🎂</h2>
+  <img class="pic" src="dashamc.png" alt="" onerror="this.style.display='none'">
+  <p>Тебе сегодня 20,это значит что ты прожила 1/5 жизни.Мы знакомы с мая и за это время ты стала для меня очень классным человеком.Спасибо за каждую катку,за всё потраченное время на меня,за то что с тобой не бывает скучно</p>
+  <p>Желаю тебе побольше побед в твоей жизни,поменьше хуков и чтобы всё получалось,пинг был не 100, а лучше все 10.Крепкий орешек пусть всегда срабатывает в твою пользу.С днём рождения! Ты крутая, и я рад, что мы знакомы</p>
+  <button onclick="go(5)">Дальше →</button>
+</div>
+
+<div class="screen cong" id="s5">
+  <h2>Подарок 🎁</h2>
+  <img class="pic" src="dashascc.jpg" alt="" onerror="this.style.display='none'">
+  <p>К сожалению я не живу в Казахстане и не шарю за маркетплейсы и интернет-площадки Казахстана из-за чего не могу подарить тебе ничего кроме денег и к сожалению не на карту)))По скриншоту я думаю ты понимаешь какой подарок.С днём рождения ещё раз! </p>
+</div>
+
+<audio id="bgm" src="dashadr.mp3" preload="auto"></audio>
+<div id="volbar">
+  <button id="pp" onclick="toggleMusic()">⏸</button>
+  <span id="tcur">0:00</span>
+  <input type="range" id="seek" min="0" max="100" step="0.1" value="0" oninput="seekTo(this.value)" onpointerdown="dragging=true" onpointerup="dragging=false" onchange="dragging=false">
+  <span id="tdur">0:00</span>
+  <span>🔈</span>
+  <input type="range" id="volr" min="0" max="1" step="0.01" value="0.6" oninput="setVol(this.value)">
+  <span>🔊</span>
+</div>
+
+<script>
+var IMG_HINT="feng.jpg";
+var Q=[
+ {q:"Кто нас познакомил?",o:["Анисия","Паша","Витя","Алина"],a:2,ok:"Правильно!"},
+ {q:"Когда была наша первая катка в DBD и мы в первый раз были в войс чате?",o:["24 мая, 18:01","28 мая, 01:24","26 мая, 23:06","23 мая, 22:02"],a:3,ok:"Точно!"},
+ {q:"Какой сурв нас с тобой связывает?",hint:true,o:["Ви Бунясак","Шерил Мейсон","Нэнси Уиллер","Фенг Мин"],a:3,ok:"Фенг Мин<333"},
+ {q:"Какой перк нас с тобой связывает?",o:["Осколок","Железная воля","Устойчивость","Крепкий орешек"],a:3,ok:"100 пинг монстр:",videos:["dashadh1.mp4","dashadh2.mp4"]},
+ {q:"Сколько градусов в круге?",o:["90","180","270","360"],a:3,ok:"Верно!",videos:["dasha360.mp4"]},
+ {q:"Что Даша любит смотреть во время игр?",o:["Инстаграм рилс","Ютуб шортс","Твич","ТикТок"],a:3,ok:"Конечно, ТикТок 😄",videos:["dashatiktok.mp4"]}
+];
+var BAD=["Не-а 😄 Попробуй ещё","Ну почти… нет 😅","Холодно ❄️ Давай ещё раз","Ты можешь лучше 😏"];
+var qi=0,tries=0;
+function startQuiz(){qi=0;showQ()}
+function showQ(){
+  var q=Q[qi];tries=0;
+  document.getElementById('qn').textContent='Вопрос '+(qi+1)+' из '+Q.length;
+  document.getElementById('qt').textContent=q.q;
+  var im=document.getElementById('qi');im.style.display='none';
+  document.getElementById('hintbtn').style.display=q.hint?'inline-block':'none';
+  document.getElementById('fb').textContent='';
+  document.getElementById('vid').innerHTML='';
+  document.getElementById('vid').style.display='none';
+  document.getElementById('qnext').style.display='none';
+  var box=document.getElementById('qo');box.innerHTML='';
+  q.o.forEach(function(t,i){
+    var b=document.createElement('button');
+    b.className='opt';b.textContent=t;
+    b.onclick=function(){pick(i,b)};
+    box.appendChild(b);
+  });
+}
+function showHint(){
+  var im=document.getElementById('qi');im.src=IMG_HINT;im.style.display='block';
+  document.getElementById('hintbtn').style.display='none';
+}
+function pick(i,b){
+  var q=Q[qi];
+  if(i===q.a){
+    b.classList.add('good');
+    document.querySelectorAll('#qo .opt').forEach(function(x){x.style.pointerEvents='none'});
+    document.getElementById('fb').textContent=q.ok;
+    if(q.videos){
+      var v=document.getElementById('vid');
+      q.videos.forEach(function(src){
+        var el=document.createElement('video');
+        el.src=src;el.controls=true;el.playsInline=true;
+        el.style.cssText='width:100%;border-radius:14px;margin-top:12px';
+        v.appendChild(el);
+      });
+      v.style.display='block';
+    }
+    document.getElementById('qnext').style.display='inline-block';
+  }else{
+    b.classList.add('bad');
+    var f=document.getElementById('fb');
+    f.textContent=BAD[tries%BAD.length];tries++;
+    f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');
+  }
+}
+function nextQ(){
+  qi++;
+  if(qi<Q.length){showQ()}else{go(4)}
+}
+var dragging=false;
+function fmt(t){if(!isFinite(t))t=0;var m=Math.floor(t/60),x=Math.floor(t%60);return m+':'+(x<10?'0':'')+x}
+function setVol(v){document.getElementById('bgm').volume=parseFloat(v)}
+function toggleMusic(){
+  var a=document.getElementById('bgm'),b=document.getElementById('pp');
+  if(a.paused){
+    if(a.ended||a.currentTime>=a.duration-0.1)a.currentTime=0;
+    var pr=a.play();
+    if(pr&&pr.catch){pr.catch(function(){})}
+    b.textContent='⏸';
+  }else{a.pause();b.textContent='▶'}
+}
+function seekTo(v){var a=document.getElementById('bgm');a.currentTime=parseFloat(v)}
+(function(){
+  var a=document.getElementById('bgm');
+  function meta(){
+    document.getElementById('tdur').textContent=fmt(a.duration);
+    document.getElementById('seek').max=isFinite(a.duration)?a.duration:100;
+  }
+  a.addEventListener('loadedmetadata',meta);
+  a.addEventListener('durationchange',meta);
+  a.addEventListener('timeupdate',function(){
+    document.getElementById('tcur').textContent=fmt(a.currentTime);
+    if(!dragging)document.getElementById('seek').value=a.currentTime;
+  });
+  a.addEventListener('ended',function(){
+    document.getElementById('pp').textContent='▶';
+    a.currentTime=0;
+    document.getElementById('tcur').textContent='0:00';
+    document.getElementById('seek').value=0;
+  });
+  if(a.readyState>=1)meta();
+})();
+function stopVid(){
+  var v=document.getElementById('vid');
+  v.querySelectorAll('video').forEach(function(x){x.pause();x.removeAttribute('src');x.load()});
+  v.innerHTML='';v.style.display='none';
+}
+function go(n){
+  stopVid();
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
+  document.getElementById('s'+n).classList.add('active');
+  if(n===3)startQuiz();
+  if(n>=4){
+    var a=document.getElementById('bgm');
+    document.getElementById('volbar').style.display='flex';
+    if(a.paused&&!a.dataset.started){
+      a.dataset.started='1';a.volume=0.6;
+      var pr=a.play();
+      if(pr&&pr.catch){pr.catch(function(){document.getElementById('pp').textContent='▶';a.dataset.started=''})}
+    }
+  }
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
